@@ -27,10 +27,10 @@ impl EventHandler for Handler {
             let (content, components) = match command.data.name.as_str() {
                 "ping" => (commands::ping::run(&command.data.options()), None),
                 "match_start" => {
-                    commands::match_::start::run(&command.data.options(), &command, &ctx).await
+                    commands::match_start::run(&command.data.options(), &command, &ctx).await
                 }
                 "match_end" => {
-                    commands::match_::end::run(&command.data.options(), &command, &ctx).await
+                    commands::match_end::run(&command.data.options(), &command, &ctx).await
                 }
 
                 _ => (Some("not implemented".to_string()), None),
@@ -69,8 +69,8 @@ impl EventHandler for Handler {
 
         for i in [
             commands::ping::register(),
-            commands::match_::start::register(),
-            commands::match_::end::register(),
+            commands::match_start::register(),
+            commands::match_end::register(),
         ] {
             match Command::create_global_command(&ctx.http, i).await {
                 Ok(result) => println!("SetGuildCommand: {}", result.name),

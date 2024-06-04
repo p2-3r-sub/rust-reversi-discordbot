@@ -1,4 +1,3 @@
-#[allow(unused)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Stone {
     NONE,
@@ -6,7 +5,6 @@ pub enum Stone {
     BLACK,
 }
 
-#[allow(unused)]
 struct SideStones {
     stones: Vec<Stone>,
     move_row: i32,
@@ -23,14 +21,12 @@ impl SideStones {
     }
 }
 
-#[allow(unused)]
 #[derive(Debug)]
 pub struct Reversi {
     pub board: [[Stone; 8]; 8],
     pub turn_stone: Stone,
 }
 
-#[allow(unused)]
 impl Reversi {
     pub fn new() -> Self {
         let mut reversi = Self {

@@ -2,7 +2,6 @@ use serenity::all::{Message, UserId};
 
 use super::reversi::Reversi;
 
-#[allow(unused)]
 #[derive(Debug)]
 pub struct RStatsUser {
     pub id: UserId,
@@ -10,7 +9,6 @@ pub struct RStatsUser {
     pub choiced_number: Option<String>,
 }
 
-#[allow(unused)]
 impl RStatsUser {
     pub fn new(user_id: UserId) -> Self {
         Self {
@@ -21,7 +19,6 @@ impl RStatsUser {
     }
 }
 
-#[allow(unused)]
 #[derive(Debug)]
 pub struct RStats {
     pub reversi: Reversi,
@@ -31,7 +28,6 @@ pub struct RStats {
     pub white_user: Option<RStatsUser>,
 }
 
-#[allow(unused)]
 impl RStats {
     pub fn new() -> Self {
         let reversi = Reversi::new();
