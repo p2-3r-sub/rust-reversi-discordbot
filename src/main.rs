@@ -112,6 +112,7 @@ async fn main() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn bot_test() {
     let token =
         config::get_token("config_test.json").expect("'config_test.json' file is not found.");

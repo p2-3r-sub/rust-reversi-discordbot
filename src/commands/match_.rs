@@ -7,9 +7,9 @@ pub mod start {
     use serenity::builder::CreateCommand;
     use serenity::model::application::ResolvedOption;
 
-    use crate::global_data::reversi::stats::RStats;
-    use crate::global_data::reversi::stats::RStatsUser;
     use crate::global_data::GlobalReversiStats;
+    use crate::reversi::stats::RStats;
+    use crate::reversi::stats::RStatsUser;
 
     #[allow(unused)]
     pub async fn run(

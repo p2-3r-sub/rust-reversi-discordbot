@@ -4,10 +4,7 @@ use serenity::all::{
     CreateInteractionResponseMessage,
 };
 
-use crate::global_data::reversi::reversi::Stone;
-
-#[path = "../commands/mod.rs"]
-mod commands;
+use crate::reversi::reversi::Stone;
 
 pub async fn alphabet(ctx: &Context, interaction: &ComponentInteraction) {
     let inter_userid = interaction.user.id;

@@ -3,8 +3,8 @@ use serenity::all::{
     UserId,
 };
 
-use crate::global_data::reversi::reversi::Stone;
 use crate::global_data::GlobalReversiStats;
+use crate::reversi::reversi::Stone;
 
 pub async fn run(ctx: &Context, interaction: &ComponentInteraction) {
     let inter_userid = interaction.user.id;
