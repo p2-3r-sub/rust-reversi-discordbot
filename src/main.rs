@@ -1,4 +1,5 @@
-use serenity::all::{Command, Ready};
+#[allow(unused_imports)]
+use serenity::all::{ActivityData, Command, Ready};
 use serenity::async_trait;
 use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage};
 use serenity::model::application::Interaction;
@@ -123,6 +124,7 @@ async fn bot_test() {
 
     let mut client = Client::builder(&token, intents)
         .event_handler(Handler)
+        .activity(ActivityData::custom("/match_start でリバーシの試合を開始"))
         .await
         .expect("Err creating client");
 
