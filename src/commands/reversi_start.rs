@@ -1,7 +1,7 @@
 use serenity::all::{
     CommandInteraction, CommandOptionType, Context, CreateActionRow, CreateButton,
-    CreateCommandOption, CreateSelectMenu, CreateSelectMenuKind, CreateSelectMenuOption,
-    ResolvedValue, UserId,
+    CreateCommandOption, CreateInteractionResponseMessage, CreateSelectMenu, CreateSelectMenuKind,
+    CreateSelectMenuOption, ResolvedValue, UserId,
 };
 use serenity::builder::CreateCommand;
 use serenity::model::application::ResolvedOption;
@@ -14,7 +14,9 @@ pub async fn run(
     options: &[ResolvedOption<'_>],
     interaction: &CommandInteraction,
     ctx: &Context,
-) -> (Option<String>, Option<Vec<CreateActionRow>>) {
+) -> CreateInteractionResponseMessage {
+    let inter_data = CreateInteractionResponseMessage::new();
+
     let rival_user = if let Some(ResolvedOption {
         value: ResolvedValue::User(rival_user, _),
         ..
@@ -22,40 +24,41 @@ pub async fn run(
     {
         rival_user
     } else {
-        return (Some("その相手は選択できません。".to_string()), None);
+        return inter_data.content("その相手は選択できません。");
     };
 
     if rival_user.bot {
-        return (Some("Botは対戦対手に指定できません。".to_string()), None);
+        return inter_data.content("Botは対戦対手に指定できません。");
     }
 
-    {
-        let mut data = ctx.data.write().await;
+    let mut data = ctx.data.write().await;
 
-        let reversi_stats = data
-            .get_mut::<GlobalReversiStats>()
-            .expect("Expected GlobalReversiStats in TypeMap.");
-        let mut reversi_stats = reversi_stats.lock().await;
+    let reversi_stats = data
+        .get_mut::<GlobalReversiStats>()
+        .expect("Expected GlobalReversiStats in TypeMap.");
+    let mut reversi_stats = reversi_stats.lock().await;
 
-        let channel_id_u64 = interaction.channel_id.get();
+    let channel_id_u64 = interaction.channel_id.get();
 
-        if reversi_stats.contains_key(&channel_id_u64) {
-            return (Some("すでに試合が行われています。".to_string()), None);
-        }
-
-        reversi_stats.insert(channel_id_u64, RStats::new());
-        let channel_stats = reversi_stats.get_mut(&channel_id_u64).unwrap();
-
-        channel_stats.black_user = Some(RStatsUser::new(interaction.user.id));
-        channel_stats.white_user = Some(RStatsUser::new(rival_user.id));
-
-        let black_username = get_username(ctx, &interaction.user.id).await;
-        let board = channel_stats.reversi.print_board();
-        return (
-            Some(format!("現在 🔵 : {black_username}の番です。\n\n{board}")),
-            Some(components(options, interaction)),
-        );
+    if reversi_stats.contains_key(&channel_id_u64) {
+        return inter_data.content("すでに試合が行われています。");
     }
+
+    reversi_stats.insert(channel_id_u64, RStats::new());
+    let channel_stats = reversi_stats.get_mut(&channel_id_u64).unwrap();
+
+    channel_stats.black_user = Some(RStatsUser::new(interaction.user.id));
+    channel_stats.white_user = Some(RStatsUser::new(rival_user.id));
+
+    let black_username = get_username(ctx, &interaction.user.id).await;
+    let board = channel_stats.reversi.print_board();
+
+    return inter_data
+        .content(format!(
+            "現在 🔵 : {}の番です。\n\n{}",
+            black_username, board
+        ))
+        .components(components(options, interaction));
 }
 
 fn components(_options: &[ResolvedOption], _ctx: &CommandInteraction) -> Vec<CreateActionRow> {
@@ -102,7 +105,7 @@ async fn get_username(ctx: &Context, user_id: &UserId) -> String {
 }
 
 pub fn register() -> CreateCommand {
-    CreateCommand::new("match_start")
+    CreateCommand::new("reversi_start")
         .description("リバーシの試合を開始します。")
         .add_option(
             CreateCommandOption::new(CommandOptionType::User, "user", "対戦相手を指定します。")

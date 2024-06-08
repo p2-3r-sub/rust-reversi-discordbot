@@ -59,34 +59,17 @@ pub async fn run(ctx: &Context, interaction: &ComponentInteraction) {
 
         // 今のリバーシのターンの人の指定した行列を取り出す
         let (alphabet, number) = {
+            let black_user = channel_stats.black_user.as_ref().unwrap();
+            let white_user = channel_stats.white_user.as_ref().unwrap();
+
             match channel_stats.reversi.turn_stone {
                 Stone::BLACK => (
-                    channel_stats
-                        .black_user
-                        .as_ref()
-                        .unwrap()
-                        .choiced_alphabet
-                        .clone(),
-                    channel_stats
-                        .black_user
-                        .as_ref()
-                        .unwrap()
-                        .choiced_number
-                        .clone(),
+                    black_user.choiced_alphabet.clone(),
+                    black_user.choiced_number.clone(),
                 ),
                 Stone::WHITE => (
-                    channel_stats
-                        .white_user
-                        .as_ref()
-                        .unwrap()
-                        .choiced_alphabet
-                        .clone(),
-                    channel_stats
-                        .white_user
-                        .as_ref()
-                        .unwrap()
-                        .choiced_number
-                        .clone(),
+                    white_user.choiced_alphabet.clone(),
+                    white_user.choiced_number.clone(),
                 ),
                 Stone::NONE => panic!("NoneError"),
             }

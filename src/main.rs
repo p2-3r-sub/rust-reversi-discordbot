@@ -12,10 +12,13 @@ mod commands;
 mod components;
 mod config;
 mod global_data;
+mod quantum_gomoku;
 mod reversi;
 
-use components::{choice_pos, push_stone};
-use global_data::GlobalReversiStats;
+use components::{
+    choice_pos, push_stone, qgomoku_choice_pos, qgomoku_push_stone, qgomoku_push_stone_observe,
+};
+use global_data::{GlobalQuantumGomokuStats, GlobalReversiStats};
 
 struct Handler;
 
@@ -23,32 +26,30 @@ struct Handler;
 impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = &interaction {
-            println!("SlashCommand Used: {}", command.data.name);
-
-            let (content, components) = match command.data.name.as_str() {
-                "ping" => (commands::ping::run(&command.data.options()), None),
-                "match_start" => {
-                    commands::match_start::run(&command.data.options(), &command, &ctx).await
-                }
-                "match_end" => {
-                    commands::match_end::run(&command.data.options(), &command, &ctx).await
+            let data = match command.data.name.as_str() {
+                "ping" => commands::ping::run(&command.data.options(), &command, &ctx).await,
+                "reversi_start" => {
+                    commands::reversi_start::run(&command.data.options(), &command, &ctx).await
                 }
 
-                _ => (Some("not implemented".to_string()), None),
+                "reversi_end" => {
+                    commands::reversi_end::run(&command.data.options(), &command, &ctx).await
+                }
+
+                "q_gomoku_start" => {
+                    commands::q_gomoku_start::run(&command.data.options(), &command, &ctx).await
+                }
+
+                "q_gomoku_end" => {
+                    commands::q_gomoku_end::run(&command.data.options(), &command, &ctx).await
+                }
+
+                _ => CreateInteractionResponseMessage::new().content("not implemented"),
             };
 
-            if let Some(content) = content {
-                let mut data = CreateInteractionResponseMessage::new().content(content);
-
-                data = match components {
-                    Some(components) => data.components(components),
-                    None => data,
-                };
-
-                let builder = CreateInteractionResponse::Message(data);
-                if let Err(why) = command.create_response(&ctx.http, builder).await {
-                    println!("Cannot respond to slash command: {why}");
-                }
+            let builder = CreateInteractionResponse::Message(data);
+            if let Err(why) = command.create_response(&ctx.http, builder).await {
+                println!("Cannot respond to slash command: {why}");
             }
         }
 
@@ -60,6 +61,13 @@ impl EventHandler for Handler {
                 "choice_number" => choice_pos::number(&ctx, interaction).await,
                 "push_stone" => push_stone::run(&ctx, interaction).await,
 
+                "qgomoku_choice_alphabet" => qgomoku_choice_pos::alphabet(&ctx, interaction).await,
+                "qgomoku_choice_number" => qgomoku_choice_pos::number(&ctx, interaction).await,
+                "qgomoku_push_stone" => qgomoku_push_stone::run(&ctx, interaction).await,
+                "qgomoku_push_stone_observe" => {
+                    qgomoku_push_stone_observe::run(&ctx, interaction).await
+                }
+
                 _ => (),
             }
         }
@@ -70,8 +78,10 @@ impl EventHandler for Handler {
 
         for i in [
             commands::ping::register(),
-            commands::match_start::register(),
-            commands::match_end::register(),
+            commands::reversi_start::register(),
+            commands::reversi_end::register(),
+            commands::q_gomoku_start::register(),
+            commands::q_gomoku_end::register(),
         ] {
             match Command::create_global_command(&ctx.http, i).await {
                 Ok(result) => println!("SetGuildCommand: {}", result.name),
@@ -95,16 +105,21 @@ async fn main() {
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MESSAGE_REACTIONS;
 
     let mut client = Client::builder(&token, intents)
         .event_handler(Handler)
+        .activity(ActivityData::custom(
+            "/reversi_start でリバーシの試合を開始",
+        ))
         .await
         .expect("Err creating client");
 
     {
         let mut data = client.data.write().await;
         data.insert::<GlobalReversiStats>(Arc::new(Mutex::new(HashMap::new())));
+        data.insert::<GlobalQuantumGomokuStats>(Arc::new(Mutex::new(HashMap::new())));
     }
 
     if let Err(why) = client.start().await {
@@ -120,17 +135,21 @@ async fn bot_test() {
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MESSAGE_REACTIONS;
 
     let mut client = Client::builder(&token, intents)
         .event_handler(Handler)
-        .activity(ActivityData::custom("/match_start でリバーシの試合を開始"))
+        .activity(ActivityData::custom(
+            "/reversi_start でリバーシの試合を開始",
+        ))
         .await
         .expect("Err creating client");
 
     {
         let mut data = client.data.write().await;
         data.insert::<GlobalReversiStats>(Arc::new(Mutex::new(HashMap::new())));
+        data.insert::<GlobalQuantumGomokuStats>(Arc::new(Mutex::new(HashMap::new())));
     }
 
     if let Err(why) = client.start().await {

@@ -1,4 +1,4 @@
-use serenity::all::{CommandInteraction, Context, CreateActionRow};
+use serenity::all::{CommandInteraction, Context, CreateInteractionResponseMessage};
 use serenity::builder::CreateCommand;
 use serenity::model::application::ResolvedOption;
 
@@ -8,7 +8,9 @@ pub async fn run(
     _options: &[ResolvedOption<'_>],
     interaction: &CommandInteraction,
     ctx: &Context,
-) -> (Option<String>, Option<Vec<CreateActionRow>>) {
+) -> CreateInteractionResponseMessage {
+    let inter_data = CreateInteractionResponseMessage::new();
+
     let mut data = ctx.data.write().await;
 
     let reversi_stats = data
@@ -18,14 +20,14 @@ pub async fn run(
     let channel_id_u64 = interaction.channel_id.get();
 
     if !(reversi_stats.contains_key(&channel_id_u64)) {
-        return (Some("試合は行われていません。".to_string()), None);
+        return inter_data.content("試合は行われていません。");
     }
 
     reversi_stats.remove(&channel_id_u64);
 
-    return (Some("試合を終了しました。".to_string()), None);
+    return inter_data.content("試合を終了しました。");
 }
 
 pub fn register() -> CreateCommand {
-    CreateCommand::new("match_end").description("リバーシの試合を終了します。")
+    CreateCommand::new("reversi_end").description("リバーシの試合を終了します。")
 }
